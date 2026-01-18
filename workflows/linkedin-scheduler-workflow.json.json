@@ -1,0 +1,552 @@
+{
+  "name": "LinkedIn Content Scheduler - Corrected",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 9
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -976,
+        96
+      ],
+      "id": "83299652-0204-4fcb-8aec-ec62824fd7fc",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "16ar7twltclPB0aUQZieLOy_lbsSCl_9REWZ9Yx8Hajw",
+          "mode": "list",
+          "cachedResultName": "LinkedIn Content Calendar",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/16ar7twltclPB0aUQZieLOy_lbsSCl_9REWZ9Yx8Hajw/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/16ar7twltclPB0aUQZieLOy_lbsSCl_9REWZ9Yx8Hajw/edit#gid=0"
+        },
+        "options": {
+          "dataLocationOnSheet": {
+            "values": {
+              "rangeDefinition": "specifyRange"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -784,
+        96
+      ],
+      "id": "6fb988be-5703-4ee0-af9b-4e1c43edca80",
+      "name": "Fetch Today's Posts",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "fXw0DS6oipuBkOKi",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "ede0a9dd-e89b-4496-b6bd-7b5c03465721",
+              "leftValue": "={{ $json.Status }}",
+              "rightValue": "Ready",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "f5364889-4170-4070-8edf-b90baf2582bf",
+              "leftValue": "={{ $json.Date }}",
+              "rightValue": "={{ $now.toFormat('yyyy-MM-dd') }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        -576,
+        96
+      ],
+      "id": "5f2ec957-d6f9-4d34-8b60-5da1f55ba325",
+      "name": "Filter Today Ready Posts"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Format LinkedIn post with proper line breaks and hashtags\nconst items = $input.all();\n\nreturn items.map(item => {\n  const post = item.json;\n  \n  // Get post text\n  let postText = post['Post Text'] || '';\n  \n  // Ensure proper line breaks (LinkedIn needs \\n\\n for paragraphs)\n  postText = postText.replace(/\\n/g, '\\n\\n');\n  \n  // Extract hashtags if they exist in separate patterns\n  // (Already included in Post Text column, so just use as-is)\n  \n  // Get image URL if exists\n  const imageUrl = post['Image URL'] || '';\n  \n  // Get row number for updating later\n  const rowNumber = item.json.__rowNum || 2; // Default to row 2 if not found\n  \n  return {\n    json: {\n      postText: postText,\n      imageUrl: imageUrl,\n      date: post.Date,\n      rowNumber: rowNumber,\n      originalData: post\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -384,
+        96
+      ],
+      "id": "5536401d-431d-43fc-aa91-eff178ec927e",
+      "name": "Format LinkedIn Post"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "768aabf1-bcbf-46fe-b20f-6c4493b281ad",
+              "name": "postUrl",
+              "value": "https://linkedin.com/posts/yourprofile-manual-post-{{ $now.toUnixInteger() }}",
+              "type": "string"
+            },
+            {
+              "id": "556befc7-c309-464c-bc72-cfbdd54c109f",
+              "name": "publishStatus",
+              "value": "Published",
+              "type": "string"
+            },
+            {
+              "id": "28f7cf74-6441-4e9e-bd55-3eb74a4dbe42",
+              "name": "publishedAt",
+              "value": "{{ $now.toISO() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -176,
+        96
+      ],
+      "id": "6b09370d-4f82-4d49-a696-d68b143a5679",
+      "name": "Simulate LinkedIn Publish",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "98d80f2a-cfcc-49c2-93aa-d1e1d632f2a2",
+              "leftValue": "={{ $json.error }}",
+              "operator": {
+                "type": "string",
+                "operation": "empty"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        32,
+        96
+      ],
+      "id": "99985764-7a8d-41fc-9099-5a075500f17b",
+      "name": "Check Publish Success"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "16ar7twltclPB0aUQZieLOy_lbsSCl_9REWZ9Yx8Hajw",
+          "mode": "list",
+          "cachedResultName": "LinkedIn Content Calendar",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/16ar7twltclPB0aUQZieLOy_lbsSCl_9REWZ9Yx8Hajw/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/16ar7twltclPB0aUQZieLOy_lbsSCl_9REWZ9Yx8Hajw/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Post URL": "={{ $json.postUrl }}",
+            "Published At": "={{ $json.publishedAt }}",
+            "Status": "Published",
+            "row_number": 2
+          },
+          "matchingColumns": [
+            "row_number"
+          ],
+          "schema": [
+            {
+              "id": "Date",
+              "displayName": "Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Post Text",
+              "displayName": "Post Text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Image URL",
+              "displayName": "Image URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Post URL",
+              "displayName": "Post URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Published At",
+              "displayName": "Published At",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        224,
+        96
+      ],
+      "id": "7b646339-3c7f-490a-b778-dc7288697b99",
+      "name": "Update Sheet with Results",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "fXw0DS6oipuBkOKi",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "16ar7twltclPB0aUQZieLOy_lbsSCl_9REWZ9Yx8Hajw",
+          "mode": "list",
+          "cachedResultName": "LinkedIn Content Calendar",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/16ar7twltclPB0aUQZieLOy_lbsSCl_9REWZ9Yx8Hajw/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/16ar7twltclPB0aUQZieLOy_lbsSCl_9REWZ9Yx8Hajw/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Status": "Published",
+            "row_number": 2
+          },
+          "matchingColumns": [
+            "row_number"
+          ],
+          "schema": [
+            {
+              "id": "Date",
+              "displayName": "Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Post Text",
+              "displayName": "Post Text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Image URL",
+              "displayName": "Image URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Post URL",
+              "displayName": "Post URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Published At",
+              "displayName": "Published At",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        432,
+        96
+      ],
+      "id": "16aea6ed-92df-42c3-8cdf-1e0f4a00fcda",
+      "name": "Mark as Published",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "fXw0DS6oipuBkOKi",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "#general",
+          "mode": "name"
+        },
+        "text": "=LinkedIn Scheduler Error\nDate: {{ $('Format LinkedIn Post').item.json.date }}\nPost Preview: {{ $('Format LinkedIn Post').item.json.postText.substring(0, 100) }}...\nError: {{ $json.error || 'Unknown error' }}\nAction needed: Check Google Sheet row {{ $('Format LinkedIn Post').item.json.rowNumber }}.",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.4,
+      "position": [
+        224,
+        320
+      ],
+      "id": "06c7e400-c6ac-4ef3-844f-8a1b7efe24da",
+      "name": "Send Error Alert",
+      "webhookId": "9069c8f3-a2a4-4df3-ba55-6692b5fd1002",
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "yv1WgeiKdv2MTrux",
+          "name": "Slack account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch Today's Posts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Today's Posts": {
+      "main": [
+        [
+          {
+            "node": "Filter Today Ready Posts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Today Ready Posts": {
+      "main": [
+        [
+          {
+            "node": "Format LinkedIn Post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format LinkedIn Post": {
+      "main": [
+        [
+          {
+            "node": "Simulate LinkedIn Publish",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simulate LinkedIn Publish": {
+      "main": [
+        [
+          {
+            "node": "Check Publish Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Publish Success": {
+      "main": [
+        [
+          {
+            "node": "Update Sheet with Results",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Error Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Sheet with Results": {
+      "main": [
+        [
+          {
+            "node": "Mark as Published",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "be417a34-3bd9-4652-b48f-522dcd30a9cd",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "420da16e8a4bbbd9d07a488b082e20b52badc29a41dd5a8a3840782b3e7ae978"
+  },
+  "id": "y1yzprWPOuHYjc61",
+  "tags": []
+}
