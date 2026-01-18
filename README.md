@@ -67,7 +67,7 @@ curl -O https://raw.githubusercontent.com/Dessybabybaby/linkedin-content-schedul
 ### Configuration
 
 1. **Create Google Sheet:**
-   - Copy template: [Link will be added]
+   - Copy template: [Google Sheet Template] (https://docs.google.com/spreadsheets/d/16ar7twltclPB0aUQZieLOy_lbsSCl_9REWZ9Yx8Hajw/edit?usp=sharing)
    - Required columns: Date, Post Text, Image URL, Status, Post URL, Published At
 
 2. **Set Google Sheets Credentials:**
