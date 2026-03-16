@@ -32,7 +32,7 @@
 **Solution:** This n8n workflow enables batch content creation inside Google Sheets, then auto-publishes to LinkedIn at scheduled times. Write 7 posts on Sunday, and the workflow handles Mon–Sun publishing automatically, tracking status, logging post URLs, and flagging failures for review.
 
 **Technology:**
-- n8n (workflow orchestration — self-hosted or cloud)
+- n8n (workflow orchestration - self-hosted or cloud)
 - Google Sheets API (content calendar and status tracking)
 - Zapier / Make.com webhook (LinkedIn publishing bridge)
 - Email / Slack API (optional error notifications)
@@ -193,7 +193,7 @@ Published At: (empty — auto-filled after publish)
 
 ## License
 
-This project is licensed under the MIT License — see [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see [LICENSE](LICENSE) file for details.
 
 You are free to:
 - ✓ Use commercially
@@ -205,8 +205,8 @@ You are free to:
 
 ## Acknowledgments
 
-- Inspired by [Automate AI Consulting](https://youtube.com/@automateaiconsulting) — automation workflow content
-- Built with [n8n.io](https://n8n.io) — workflow automation platform
+- Inspired by [Automate AI Consulting](https://youtube.com/@automateaiconsulting) - automation workflow content
+- Built with [n8n.io](https://n8n.io) - workflow automation platform
 - LinkedIn bridge powered by [Zapier](https://zapier.com) / [Make.com](https://make.com)
 
 ---
