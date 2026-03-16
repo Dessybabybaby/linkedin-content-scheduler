@@ -1,151 +1,224 @@
 # LinkedIn Content Scheduler
 
-> **Automate LinkedIn posting from Google Sheets - batch-create posts weekly, auto-publish daily**
+> Automated LinkedIn publishing system using n8n to batch-create posts in Google Sheets, evaluate scheduling, and publish daily without manual effort
 
-![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![n8n](https://img.shields.io/badge/n8n-workflow-FF6D5A)](https://n8n.io)
 
-## Problem Statement
-
-Content creators and marketers spend 3-5 hours weekly on LinkedIn:
-- Manually posting every day to maintain consistency
-- Context-switching between content creation and publishing
-- Missing optimal posting times due to schedule conflicts
-- No centralized content calendar for planning
-
-**Real cost:** 15-20 hours/month of prime creative time wasted on manual publishing.
-
-## Solution
-
-This n8n workflow enables batch content creation in Google Sheets, then auto-publishes to LinkedIn at scheduled times:
--  **Batch creation** - Write 7 posts on Sunday, publish Mon-Sun automatically
--  **Scheduled posting** - Posts go live at optimal times (7am, 12pm, 6pm)
--  **Draft management** - Status tracking (Draft, Ready, Published, Failed)
--  **Engagement tracking** - Auto-logs post URLs for analytics
--  **Error recovery** - Failed posts flagged for manual review
-
-**Impact:** 5 hrs/week → 30 min/week (90% time reduction)
-
-##  Architecture
-
-![Architecture Diagram](docs/architecture-diagram.png)
-
-**Workflow Steps:**
-1. **Trigger:** Schedule (daily at 9am Lagos time)
-2. **Fetch Content:** Read Google Sheets for today's posts (status = "Ready")
-3. **Format Post:** Add hashtags, line breaks, mentions
-4. **Publish to LinkedIn:** POST via webhook to Zapier/Make (LinkedIn API alternative)
-5. **Update Sheet:** Log post URL, set status = "Published", timestamp
-6. **Error Handler:** Flag failed posts, send Slack alert
-
-**Tech Stack:**
-- n8n (workflow orchestration)
-- Google Sheets API (content calendar)
-- Zapier/Make webhook (LinkedIn publishing bridge)
-- Slack API (error notifications)
-
-**Note:** LinkedIn API requires approved developer app. This workflow uses Zapier/Make as bridge (free tier: 100 tasks/month) OR you can manually publish while workflow logs to sheet.
-
-##  Quick Start
-
-### Prerequisites
-- n8n installed
-- Google account
-- Zapier account (free tier) OR Make.com account
-- Slack workspace (optional, for alerts)
-
-### Installation
-
-**Option 1: Import Workflow**
-```bash
-curl -O https://raw.githubusercontent.com/Dessybabybaby/linkedin-content-scheduler/main/workflows/linkedin-scheduler-workflow.json
-# Import in n8n UI
-```
-
-**Option 2: Manual Build (Follow guide below)**
-
-### Configuration
-
-1. **Create Google Sheet:**
-   - Copy template: [Google Sheet Template] (https://docs.google.com/spreadsheets/d/16ar7twltclPB0aUQZieLOy_lbsSCl_9REWZ9Yx8Hajw/edit?usp=sharing)
-   - Required columns: Date, Post Text, Image URL, Status, Post URL, Published At
-
-2. **Set Google Sheets Credentials:**
-   - n8n → Credentials → Google Sheets OAuth2
-   - Authorize account
-
-3. **Set Zapier/Make Webhook:**
-   - Create Zap: Webhook → LinkedIn
-   - Copy webhook URL
-   - Paste in n8n HTTP Request node
-
-4. **Test Execution:**
-   - Add test post to Google Sheet (today's date, status = "Ready")
-   - Execute workflow
-   - Verify post published OR logged
-
-##  Sample Data
-
-**Google Sheet Row:**
-```
-Date: 2026-01-18
-Post Text: "🚀 Just shipped Project 1: Email-to-Task automation\n\nBuilt with n8n to save 8 hrs/week.\n\nCheck it out: [GitHub link]\n\n#Automation #n8n #Productivity"
-Image URL: (empty)
-Status: Ready
-Post URL: (empty - will be filled)
-Published At: (empty - will be filled)
-```
-
-**Expected Output:**
-```json
-{
-  "postUrl": "https://linkedin.com/posts/yourprofile_...",
-  "status": "Published",
-  "publishedAt": "2026-01-18T09:00:15Z"
-}
-```
-
-##  Success Metrics
-
-After 30 days with 25 posts:
--  **Time saved:** 5 hrs/week → 30 min/week (90% reduction)
--  **Consistency:** 25/25 posts published on schedule (100%)
--  **Engagement:** 23% avg increase (posting at optimal times)
--  **Content planning:** 4-week calendar maintained vs 0 before
-
-##  Customization
-
-**Common Modifications:**
-- **Change posting time:** Edit Schedule Trigger (default: 9am daily)
-- **Multiple posts/day:** Add second schedule trigger for 6pm
-- **Add image support:** Include Image URL column, pass to LinkedIn API
-- **Thread posts:** Add "Thread ID" column for multi-post threads
-
-##  Troubleshooting
-
-| Issue | Solution |
-|-------|----------|
-| No posts detected | Check Sheet filter: Date = TODAY() AND Status = "Ready" |
-| LinkedIn publish fails | Verify Zapier/Make webhook URL, check Zap is ON |
-| Sheet not updating | Verify Google Sheets API credentials, check Sheet ID |
-| Wrong timezone | Set Schedule Trigger timezone to Africa/Lagos |
-
-##  License
-
-MIT License
-
-##  Credits
-
-- Inspired by [Automate AI Consulting](https://youtube.com/@automateaiconsulting)
-- Built by [Desmond Achusi](https://linkedin.com/in/achusi-desmond)
-
-
-##  Contact
-
-- LinkedIn: [Achusi Desmond](https://linkedin.com/in/achusi-desmond)
-- Email: achusidesmond4@gmail.com
-- Portfolio: [GitHub Projects](https://github.com/Dessybabybaby)
+![Workflow Screenshot](media/workflow-screenshot-lcs.png)
 
 ---
 
-** If this workflow helps your content strategy, please star the repo!**
+## Table of Contents
+
+- [Overview](#overview)
+- [Features](#features)
+- [Demo](#demo)
+- [Prerequisites](#prerequisites)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Expected Output](#expected-output)
+- [Sample Data](#sample-data)
+- [Troubleshooting](#troubleshooting)
+- [License](#license)
+- [Acknowledgments](#acknowledgments)
+
+---
+
+## Overview
+
+**Problem:** Content creators and marketers spend 3–5 hours weekly on LinkedIn — manually posting every day, context-switching between creation and publishing, and missing optimal posting windows. That's 15–20 hours of prime creative time wasted per month.
+
+**Solution:** This n8n workflow enables batch content creation inside Google Sheets, then auto-publishes to LinkedIn at scheduled times. Write 7 posts on Sunday, and the workflow handles Mon–Sun publishing automatically — tracking status, logging post URLs, and flagging failures for review.
+
+**Technology:**
+- n8n (workflow orchestration — self-hosted or cloud)
+- Google Sheets API (content calendar and status tracking)
+- Zapier / Make.com webhook (LinkedIn publishing bridge)
+- Email / Slack API (optional error notifications)
+
+---
+
+## Features
+
+- Batch content creation (write once, publish daily)
+- Scheduled auto-publishing at optimal times (7am, 12pm, 6pm)
+- Draft status management (Draft → Ready → Published / Failed)
+- Post URL logging for engagement tracking
+- Duplicate prevention via status-based filtering
+- Error recovery with Slack alerts for failed posts
+- Low-maintenance design built to reduce manual effort by 90%
+
+---
+
+## Demo
+
+### Audio Case Study (Coming Soon)
+
+### Visual Demo
+![Demo GIF](docs/demo.gif)
+
+---
+
+## Prerequisites
+
+**Required:**
+- **n8n instance** (self-hosted via Docker OR n8n cloud)
+  - Self-hosted install: https://docs.n8n.io/hosting/installation/docker/
+  - Cloud trial: https://n8n.io/cloud
+- **Google account** for Sheets integration
+
+**For LinkedIn Publishing:**
+- Zapier account (free tier — 100 tasks/month) OR Make.com account
+  - Used as a bridge since LinkedIn API requires an approved developer app
+
+**Optional:**
+- **Email / Slack workspace** for error alert notifications (free)
+
+---
+
+## Installation
+
+### Quick Start: Import Workflow (5 minutes)
+
+1. **Download workflow export:**
+   - Go to: [Releases](https://github.com/Dessybabybaby/linkedin-content-scheduler/releases)
+   - Download `linkedin-scheduler-workflow.json`
+
+2. **Import to n8n:**
+   - Open n8n UI
+   - Click **"Workflows"** → **"Add Workflow"** → **"Import from File"**
+   - Select downloaded `linkedin-scheduler-workflow.json`
+   - Click **"Import"**
+
+3. **Configure Google Sheets:**
+   - Copy the content calendar template: [Google Sheet Template](https://docs.google.com/spreadsheets/d/16ar7twltclPB0aUQZieLOy_lbsSCl_9REWZ9Yx8Hajw/edit?usp=sharing)
+   - Required columns: `Date | Post Text | Image URL | Status | Post URL | Published At`
+   - Connect your Google account in n8n under **Credentials → Google Sheets OAuth2**
+
+4. **Configure Zapier / Make webhook:**
+   - Create a Zap: **Webhook → LinkedIn Post**
+   - Copy the generated webhook URL
+   - Paste it into the **HTTP Request** node inside n8n
+
+5. **Configure Slack alerts (optional):**
+   - Click on the **"Send Slack Alert"** node
+   - Click **"Select Credential"** → **"Create New"**
+   - Paste your Slack Bot Token and target channel
+   - Click **"Save"**
+
+6. **Activate workflow:**
+   - Toggle **Active** (top-right of n8n UI)
+
+7. **Test manually:**
+   - Add a row to the Google Sheet (today's date, Status = `Ready`)
+   - Click **Execute Workflow**
+   - Verify the post is published and the sheet row is updated
+
+---
+
+## Usage
+
+### Automatic Execution
+Workflow triggers daily at 9am (Africa/Lagos timezone) and checks for posts due that day.
+
+### Manual Execution
+1. Open the workflow in n8n
+2. Click **Execute Workflow**
+3. Observe each node's execution in real time
+4. Check the Google Sheet and LinkedIn for confirmation
+
+### Workflow Logic
+
+1. Trigger fires on schedule
+2. Fetch rows from Google Sheets where `Date = TODAY()` and `Status = Ready`
+3. Format post text (hashtags, line breaks, mentions)
+4. Publish via Zapier / Make webhook to LinkedIn
+5. Update sheet row: log Post URL, set `Status = Published`, write timestamp
+6. On failure: set `Status = Failed`, send Slack alert for manual review
+
+---
+
+## Expected Output
+
+**Google Sheet Update**
+```
+Post URL:      https://linkedin.com/posts/yourprofile_...
+Status:        Published
+Published At:  2026-01-18T09:00:15Z
+```
+
+**Slack Alert (on failure)**
+```
+[FAILED] LinkedIn Post — 2026-01-18
+Reason: Zapier webhook returned 4xx
+Action Required: Review row 12 in content calendar
+```
+
+---
+
+## Sample Data
+
+Test the workflow with a sample row before going to production.
+
+**Google Sheet Row:**
+```
+Date:         2026-01-18
+Post Text:    Just shipped Project 1: Email-to-Task automation
+
+              Built with n8n to save 8 hrs/week.
+
+              Check it out: [GitHub link]
+
+              #Automation #n8n #Productivity
+Image URL:    (empty)
+Status:       Ready
+Post URL:     (empty — auto-filled after publish)
+Published At: (empty — auto-filled after publish)
+```
+
+---
+
+## Troubleshooting
+
+| Issue | Solution |
+|-------|----------|
+| No posts detected | Check Sheet filter: `Date = TODAY()` AND `Status = Ready` |
+| LinkedIn publish fails | Verify Zapier / Make webhook URL; confirm Zap is active |
+| Sheet not updating | Re-authorize Google Sheets credentials; verify Sheet ID |
+| Wrong posting timezone | Set Schedule Trigger timezone to `Africa/Lagos` |
+| Duplicate posts | Confirm status column updates to `Published` after each run |
+
+---
+
+## License
+
+This project is licensed under the MIT License — see [LICENSE](LICENSE) file for details.
+
+You are free to:
+- ✓ Use commercially
+- ✓ Modify
+- ✓ Distribute
+- ✓ Private use
+
+---
+
+## Acknowledgments
+
+- Inspired by [Automate AI Consulting](https://youtube.com/@automateaiconsulting) — automation workflow content
+- Built with [n8n.io](https://n8n.io) — workflow automation platform
+- LinkedIn bridge powered by [Zapier](https://zapier.com) / [Make.com](https://make.com)
+
+---
+
+## Contact & Portfolio
+
+**Creator:** Achusi Desmond
+- Portfolio: [My Story](https://achusi-desmond.vercel.app/)
+- GitHub: [Dessybabybaby](https://github.com/Dessybabybaby)
+- LinkedIn: [Achusi Desmond](https://linkedin.com/in/achusi-desmond)
+- Email: achusidesmond4@gmail.com
+
+---
+
+**If this workflow helps your content strategy, please star the repo!**
