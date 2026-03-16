@@ -29,7 +29,7 @@
 
 **Problem:** Content creators and marketers spend 3–5 hours weekly on LinkedIn manually posting every day, context-switching between creation and publishing, and missing optimal posting windows. That is 15–20 hours of prime creative time wasted per month.
 
-**Solution:** This n8n workflow enables batch content creation inside Google Sheets, then auto-publishes to LinkedIn at scheduled times. Write 7 posts on Sunday, and the workflow handles Mon–Sun publishing automatically — tracking status, logging post URLs, and flagging failures for review.
+**Solution:** This n8n workflow enables batch content creation inside Google Sheets, then auto-publishes to LinkedIn at scheduled times. Write 7 posts on Sunday, and the workflow handles Mon–Sun publishing automatically, tracking status, logging post URLs, and flagging failures for review.
 
 **Technology:**
 - n8n (workflow orchestration — self-hosted or cloud)
@@ -69,7 +69,7 @@
 - **Google account** for Sheets integration
 
 **For LinkedIn Publishing:**
-- Zapier account (free tier — 100 tasks/month) OR Make.com account
+- Zapier account (free tier- 100 tasks/month) OR Make.com account
   - Used as a bridge since LinkedIn API requires an approved developer app
 
 **Optional:**
